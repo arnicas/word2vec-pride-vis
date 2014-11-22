@@ -15,4 +15,5 @@ If you want to run this and modify any part (different parts of speech, etc), th
 * Start a server and load your web page (eg., python -m SimpleHTTPServer 8000)
 
 Live version: http://www.ghostweather.com/files/word2vecpride/
-Blog post with more details about what this is: 
+
+Blog post with more details about what this is: http://blogger.ghostweather.com/2014/11/visualizing-word-embeddings-in-pride.html
