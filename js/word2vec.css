@@ -1,0 +1,208 @@
+
+body {
+    font-size: 1em;
+    font-family: "Playfair", Palatino, serif;
+    background-image: url("seamless_paper_texture.png");
+}
+
+.full-container {
+  background: #E6E4DB;
+  float:right;
+}
+
+.left-side {
+  float: right;
+  max-width: 700px;
+  min-width: 500px;
+  padding: 20px;
+  margin-right: 630;
+}
+
+.header {
+  width: 100%;
+  text-align: center;
+  padding: 10px;ß
+  color: #386890;
+}
+
+.header-span {
+  font-family: 'Open Sans', Verdana, sans-serif;
+  color: black;
+}
+
+h3 {
+  text-transform: uppercase;
+  font-family: 'Playfair', Georgia, serif;
+  color: #53371C;
+}
+
+h5 {
+  font-family: 'Open Sans', Verdana, sans-serif;
+  color: black;
+  margin-top: -10px;
+  margin-bottom: -15px;
+}
+
+.explanation {
+  padding: 15px;
+  font-family: 'Open Sans', Verdana, sans-serif;
+  font-style: italic;
+  font-size: .9em;
+  background: #FAF8F5;
+  margin: 1px;
+}
+
+.text-container {
+  background: #FAF8F5;
+  padding: 5px;
+}
+
+p {
+  line-height: 150%;
+  padding-left: 10px;
+  padding-right: 10px;
+  color: #53371C;
+}
+
+.myQTip {
+  border: 1px solid #346C80;
+  color: #346C80;
+  background-color: #E6E4DB;
+}
+
+.myQTip .qtip-content {
+  font-size: 12px;
+}
+
+.purple {
+  color: #A867A8;
+}
+
+.color {
+  diplay: inline-block;
+}
+
+.graphword {
+  font-size: 1em;
+  font-family: 'Open Sans', Verdana, sans-serif;
+}
+
+.pastword {
+  font-size: .7em;
+  opacity: 0.65;
+  fill: gray;
+}
+
+.pastdot {
+  opacity: 0.65;
+  size: 2;
+}
+
+#new-word {
+  fill: #346C80;
+}
+
+#old-word {
+  fill: #A867A8;
+}
+
+.blue-word-legend {
+  fill: #346C80;
+}
+
+.legend {
+  opacity: .9;
+}
+
+.legend-text {
+  font-size: .7em;
+}
+
+path.line {
+  stroke: gray;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  z-index: 100;
+}
+
+.hide {
+  display: none;
+}
+
+.clear-words {
+  z-index: 50;
+  position: fixed;
+  display: inline-block;
+  top: 110px;
+  right: 25px;
+  font-family: 'Open Sans', Verdana, sans-serif;
+  font-size: .7em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+p#clear-words-link {
+  margin-bottom: 5px;
+  margin-top: 15px;
+  margin-right: 3px;
+}
+
+.tab-container{
+  width: 600px;
+  position:  fixed;
+  top: 110px;
+  right: 20px;
+  margin: 0 auto;
+  font-family: 'Open Sans', Verdana, sans-serif;
+}
+
+ul.tabs{
+  margin: 0px;
+  padding: 0px;
+  list-style: none;
+}
+
+ul.tabs li{
+  background: none;
+  color: #222;
+  display: inline-block;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+ul.tabs li.current{
+  background: #FAF8F5;
+  border-top: 1px #E1D8CF solid;
+  border-right: 1px #E1D8CF solid;
+  border-left: 1px #E1D8CF solid;
+  color: #222;
+}
+
+.tab-content{
+  display: none;
+  background: #FAF8F5;
+  padding: 15px;
+}
+
+.tab-content.current{
+  display: inherit;
+  border: 1px #E1D8CF solid;
+}
+
+#graph {
+  position: fixed;
+  top: 150px;
+  right: 20px;
+  overflow: visible;
+  background: url('../data/pride_NN_tsne.png');
+  background-color: #FAF8F5;
+  background-size: 600px 600px;
+  border: 1px #E1D8CF solid;
+}
+
+.loader {
+  position: relative;
+  margin-left: 300px;
+  margin-bottom: 100px;
+  display: block;
+}
