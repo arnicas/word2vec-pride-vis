@@ -78,6 +78,11 @@ p {
   color: #A867A8;
 }
 
+.bluecolor {
+  display: inline-block;
+  background: #A1C5D2;
+}
+
 .color {
   diplay: inline-block;
 }
@@ -194,7 +199,7 @@ ul.tabs li.current{
   top: 150px;
   right: 20px;
   overflow: visible;
-  background: url('../data/pride_NN_tsne.png');
+  background: url('../data/pride_NNAll3_tsne.png');
   background-color: #FAF8F5;
   background-size: 600px 600px;
   border: 1px #E1D8CF solid;
