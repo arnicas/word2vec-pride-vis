@@ -1,0 +1,367 @@
+<html>
+<title>Word2Vec Vis of Pride and Prejudice</title>
+<head>
+  <meta name="keywords" content="infovis,text,word2vec,tsne,austen,distances,visualization">
+  <meta name=”description” content=”A visualization of word distances in Pride and Prejudice using word2vec and tSNE”>
+</head>
+  <link type="text/css" rel="stylesheet" href="js/word2vec.css" />
+<body>
+
+<div class="full-container">
+
+     <div class="header" >
+    <h3>Pride &amp; Prejudice <span class="header-span">&amp; Word Embedding Distance </span></h3>
+    <h5>A "quickie" word2vec/t-SNE vis by <a href="http://www.ghostweather.com/">Lynn Cherny</a> (@arnicas)</h5>
+  </div>
+
+  <div class="left-side">
+
+    <div class="explanation">An experiment: Train a <a href="http://radimrehurek.com/gensim/models/word2vec.html">word2vec</a> model on Jane Austen's books, then replace the nouns in P&amp;P with the nearest word in that model. The graph shows a 2D t-SNE distance plot of the nouns in this book, original and replacement. Mouse over the <span class="bluecolor">blue words</span>!</div>
+
+    <div class="text-container">
+      <div id="text1"></div>
+      <div id="text2"></div>
+      <div id="text3"></div>
+      <div id="text4"></div>
+      <div id="text5"></div>
+      <div id="text6"></div>
+      <div id="text7"></div>
+      <div id="text8"></div>
+      <div id="text9"></div>
+      <div id="text10"></div>
+      <div id="text11"></div>
+      <div id="text12"></div>
+    </div>
+
+  <div class="loader"><img src="js/ajax-loader.gif" /></div>
+  </div>
+
+  <div class="right-side">
+
+    <div class="clear-words">
+      <p id="clear-words-link">Clear Words</p>
+    </div>
+
+    <div class="tab-container">
+
+      <ul class="tabs">
+        <li class="tab-link current" data-tab="tab-1">t-SNE Graph</li>
+        <li class="tab-link" data-tab="tab-2">How It's Done</li>
+        <li class="tab-link" data-tab="tab-3">So What? &amp; Links</li>
+      </ul>
+
+      <div id="tab-1" class="tab-content current">
+          <div id="graph">
+              <svg id="svg"></svg>
+              </div>
+      </div>
+      <div id="tab-2" class="tab-content">
+         <p>I downloaded the texts for all Jane Austen novels from <a href="https://www.gutenberg.org/">Project Gutenberg</a> and reduced the files to just the main book text (no table of contents, etc.).
+         <p>I trained a word2vec model on the full text in gensim <a href="http://radimrehurek.com/2014/02/word2vec-tutorial/">gensim</a>.
+         <p>Then I replaced all nouns inside <b>Pride and Prejudice</b> with their closest match according to the model's similarity function. This means closest based on use of words in the whole Austen oeuvre!
+         <p>I used a Python <a href="http://homepage.tudelft.nl/19j49/t-SNE.html">t-SNE library</a> to reduce the 200 feature dimensions for each word to 2 dimensions and plotted them in matplotlib. I saved out the x/y coordinates for each word in the book, so that I can show those words on the graph as you mouse over the replaced (blue) words.
+        <p>The UI uses the novel text preprocessed in Python (where I wrote the 'span' tag around each noun), a csv file for the word locations, and a PNG with dots for all word locations with a transparent background.  The D3 SVG works on top of that (this is the coolest hack in the project, IMO).
+      </div>
+      <div id="tab-3" class="tab-content">
+        <p>No, it's not a good read.  I stuck to "top match" in the model, deciding this is about Jane's oeuvre themes, not a good novel mashup. Also, the vis illustrates the occasionally indirect relationship between the closeness in word2vec and the t-SNE 2d plot, although frequently (with this model) the word pairs appear near each other on the graph.
+        <p>For more on how/why I got here and my sillier mistakes, visit <a href="http://blogger.ghostweather.com/2014/11/visualizing-word-embeddings-in-pride.html">my blog post</a> and the <a href="https://github.com/arnicas/word2vec-pride-vis">git repo</a>.
+      </div>
+
+    </div><!-- tab-container -->
+  </div>
+</div> <!-- full-container -->
+
+</body>
+
+<script type="text/javascript" src="js/d3.min.js"></script>
+<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+<script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+<script type="text/javascript" src="js/jquery.qtip.min.js"></script>
+<link type="text/css" rel="stylesheet" href="js/jquery.qtip.min.css" />
+<link href='https://fonts.googleapis.com/css?family=Open+Sans|Playfair+Display' rel='stylesheet' type='text/css'>
+<script>
+var CUTOFF = 13; // parts in the book to load
+var COORDS_FILE = 'data/pride_NNAll3_coords.tsv';
+// these vals are for the graph limits
+var XLIM = [-150,150];
+var YLIM = [-150, 150];
+
+var counter = 1;
+var notFounds = [];  // logging for me; words in the text not found in the json/csv
+var pathline, svg, newDot, formerDot, colorscale;
+var linedata = [];
+var lookup = {};
+
+var line = d3.svg.line()
+    .x(function (d) {return d.x;})
+    .y(function (d) {return d.y;});
+
+  d3.tsv(COORDS_FILE, function (coords) {
+
+    coords.forEach(function (c) {
+      // beware - any stray newlines etc may break this import.
+      lookup[c.word.toLowerCase()] = {'x': c.x, 'y': c.y, 'word': c.word.toLowerCase()};
+    });
+
+    var score_range = d3.extent(coords, function(d) {
+      // the nearest scores are just to set the color range
+      return +d.nearest;
+    });
+
+    // shades of blue for words in text
+    colorscale = d3.scale.linear().domain(score_range).range(['#DAE6F0','#9CC2CF']);
+
+    svg = d3.select("#svg").attr('width', 600).attr('height', 600);
+
+    // fixed according to the graph units in the plot output - check axes vals
+    xscale = d3.scale.linear().range([25, 590]).domain(XLIM);
+    yscale = d3.scale.linear().range([590, 10]).domain(YLIM);
+
+    d3.text('data/parts/part1.txt', function (text) {
+
+      load_file_part(text, counter);
+
+      // draws a blank line and dots initially; animated and revealed later
+
+      draw_legend(svg);
+
+      svg.append('g').attr('class', 'line-text');
+
+      pathline = svg.select('g.line-text')
+          .append('path')
+          .datum(linedata)
+          .attr('class', 'line' )
+          .attr('d', line);
+
+      newDot = d3.select('g.line-text')
+        .append('circle')
+        .attr('class', 'dot')
+        .attr('id', 'new-word')
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', 3);
+
+      formerDot = d3.select('g.line-text')
+        .append('circle')
+        .attr('class', 'dot')
+        .attr('id', 'old-word')
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('r', 3);
+
+      newDot.classed('hide', true);
+      formerDot.classed('hide', true);
+
+      // Lovely tabs help here:  http://codepen.io/cssjockey/pen/jGzuK
+      $(document).ready(function(){
+
+        var width = $(window).width();
+        var remainder = width - 1220;
+        if (remainder > 0) {
+          // super hacky adjustments to keep things kind of centered despite fixed
+          $('.full-container').css({'margin-left': remainder/2});
+          $('.full-container').css({'margin-right': remainder/2 - 30});
+          $('#graph').css({'right': remainder/2});
+          $('.clear-words').css({'right': remainder/2 - 10});
+          $('.tab-container').css({'right': remainder/2});
+        }
+
+        $('ul.tabs li').click(function(){
+          var tab_id = $(this).attr('data-tab');
+
+          $('ul.tabs li').removeClass('current');
+          $('.tab-content').removeClass('current');
+
+          $(this).addClass('current');
+          $('#' + tab_id).addClass('current');
+        });
+
+        $('p#clear-words-link').click(clear_words);
+
+      });
+
+      $(window).scroll(function () {
+        if (counter + 1 < CUTOFF) {
+          get_more();
+        }
+      });
+
+    }); // end d3.text part 1
+});
+
+function clear_words() {
+  svg.selectAll('g.line-text text').remove();
+}
+
+function draw_legend(el) {
+
+  var legend = el.append('g').attr('class', 'legend');
+
+      legend.append('text')
+        .attr('class', 'legend-text')
+        .attr('x', 18)
+        .attr('y', 10)
+        .attr('dy', 4)
+        .html('Mouse over a <tspan class="blue-word-legend">blue word</tspan> in the text.')
+
+      legend.append('circle')
+        .classed('lengend', true)
+        .attr('id', 'old-word')
+        .attr('r', 5)
+        .attr('cx', 450)
+        .attr('cy', 10);
+      legend.append('text')
+        .attr('class', 'legend-text')
+        .attr('x', 450)
+        .attr('y', 10)
+        .attr('dx', 8)
+        .attr('dy', 4)
+        .text('Original');
+
+      legend.append('circle')
+        .classed('lengend', true)
+        .attr('id', 'new-word')
+        .attr('r', 5)
+        .attr('cx', 510)
+        .attr('cy', 10);
+      legend.append('text')
+        .attr('class', 'legend-text')
+        .attr('x', 510)
+        .attr('dx', 8)
+        .attr('y', 10)
+        .attr('dy', 4)
+        .text('Replacement');
+}
+
+function mouseWords() {
+
+  // lookkup holds the csv coords for each dot in the tsne pic
+
+  var newWord = lookup[this.getAttribute('newWord').toLowerCase()];
+  var formerWord = lookup[this.getAttribute('formerWord').toLowerCase()];
+  var score = this.getAttribute('score');
+
+  linedata = [ {'x': xscale(newWord.x), 'y': yscale(newWord.y) },
+            {'x':  xscale(formerWord.x), 'y': yscale(formerWord.y) } ];
+
+  d3.selectAll('text.pastword').classed('hide', true);  // show them in mouseHide mode
+
+  // the text for new blue word in the graph
+  // the locations for the words need to be adjusted based on the shape of the 
+  // graph; words look better being on either side of the line
+
+  d3.select('g.line-text').append('text')
+    .attr('class', 'graphword')
+    .attr('id', 'new-word')
+    .attr('text-anchor', 'end')
+    .attr('x', xscale(newWord.x))
+    .attr('y', yscale(newWord.y))
+    .attr('dx', -5)
+    .attr('dy', 8)
+    .text(newWord.word);
+
+  // text for old purple word in the graph
+  d3.select('g.line-text').append('text')
+    .attr('class', 'graphword')
+    .attr('id', 'old-word')
+    .attr('text-anchor', 'start')
+    .attr('dx', 5)
+    .attr('dy', -3)
+    .attr('x', xscale(formerWord.x))
+    .attr('y', yscale(formerWord.y))
+    .text(formerWord.word);
+
+  pathline.classed('hide', false);
+  d3.selectAll('circle.dot').classed('hide', false);
+
+  pathline.datum(linedata).transition()
+      .duration(400)
+      .attr('d', line)
+      .attr('stroke-opacity', score);
+
+  newDot.transition().duration(400)
+    .attr('cx', xscale(newWord.x))
+    .attr('cy', yscale(newWord.y));
+
+  formerDot.transition().duration(400)
+    .attr('cx', xscale(formerWord.x))
+    .attr('cy', yscale(formerWord.y));
+
+}
+
+function mouseHide() {
+
+    // hide lines and show little words only on mouse-exit
+    // Note: words don't move to the dot location, but stay where they were 
+    // displayed.  This is less than ideal, but.
+
+  d3.select('path.line').classed('hide',true);
+  d3.selectAll('circle.dot').classed('hide', true);
+  d3.selectAll('text.graphword')
+    .classed('graphword',false)
+    .attr('class','pastword');
+  d3.selectAll('.pastword').classed('hide', false);
+
+}
+
+function load_file_part(words, partNum) {
+
+    if (words) {
+
+      // need the timeout to make sure each part gets loaded/drawn
+      setTimeout(function () {
+        d3.select('#text' + partNum)
+        .html(words);
+
+        // enable graph stuff on mouseover of words
+        d3.selectAll('span.color')
+          .style('background', function (d) {
+            var score = +this.getAttribute('score');
+            return colorscale(score);
+        })
+        .on('mouseover', mouseWords)
+        .on('mouseout', mouseHide);
+
+        $('#text' + partNum + ' span').qtip({
+          style: {
+            def: false,
+            classes: 'myQTip'
+          }
+        });
+
+    }, 500);
+
+    } else {
+      console.log('Nothing in words');
+    }
+}
+
+function get_more () {
+    var scroll = $(window).scrollTop();
+    if ( (scroll >= $(document).height() * .90) ) {
+        counter += 1;  // started with part 1 already.
+        $('div.loader').show();  // this is solidly crappy.
+        $.ajax({
+        url: 'data/parts/part' + counter + '.txt',
+        success: function(text) {
+            if (text) {
+              load_file_part(text, counter);
+              $('div.loader').hide();
+            }
+            else {
+              console.log('Problem with file?');
+            }
+        } // end success
+      }); // end ajax
+    } // end if scroll
+}
+
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-330534-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</html>
