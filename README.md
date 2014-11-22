@@ -3,7 +3,9 @@ word2vec-pride-vis
 
 A hack to replace Pride &amp; Predjudice text with closest word2vec model word, and visualize results.
 
-IPython notebook link: 
+To use this, you need Python packages gensim, pattern.py.  Local tsne.py is provided here.
+
+IPython notebook viewer link: http://nbviewer.ipython.org/github/arnicas/word2vec-pride-vis/blob/master/Python-Word2Vec-PrideProcessor.ipynb
 
 If you want to run this and modify any part (different parts of speech, etc), the web part needs these updates:
 * Right-click and save the graph png into your data directory
