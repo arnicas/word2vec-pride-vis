@@ -187,6 +187,7 @@ ul.tabs li.current{
   display: none;
   background: #FAF8F5;
   padding: 15px;
+  font-size: .9em;
 }
 
 .tab-content.current{
